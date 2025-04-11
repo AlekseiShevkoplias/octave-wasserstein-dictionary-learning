@@ -7,7 +7,8 @@ set(gca,'box','on')
 axis(axisValues)
 set(gca,'yTick',axisValues(3):YtickStep:axisValues(4))
 set(gca,'xTick',mu)
-set(gca,'defaulttextinterpreter','latex');
-legend(legendArray,'interpreter','latex');
+% set(gca,'defaulttextinterpreter','latex');
+% legend(legendArray,'interpreter','latex');
+legend(legendArray);
 title(titleText)
 end

@@ -14,16 +14,34 @@ x=linspace(minVal,maxVal,ndiscretize);  % value of the histograms bins
 
 mu=[-6;0;6];                            % mean values for the Gaussians means
 shiftVariance=2*eye(3);                 % variance of the Gaussians means
-mean=mvnrnd(mu,shiftVariance,ndata)';   % generate the gaussian means
+mean=(randn(ndata, size(mu,1)) * chol(shiftVariance))' + mu;   % generate the gaussian means
 p=rand(3,ndata);                        % generate the mixture weights
 
 sigma=1;                                % variance of the Gaussians
 
 data=zeros(ndiscretize,ndata);          % preallocate memory
-for i=1:ndata
-    distrib=gmdistribution(mean(:,i),sigma,p(:,i)); % generate a mixture of gaussians distribution
-    a=random(distrib,niidsample);                   % sample the distribution
-    data(:,i)=hist(a(a>minVal&a<maxVal),x)';        % gather samples in a histogram
+for i = 1:ndata
+    % Number of samples for each of the 3 Gaussians, based on mixture weights
+    weights = p(:, i);
+    weights = weights / sum(weights);  % Ensure they sum to 1
+
+    sample_counts = round(weights * niidsample);
+    total_samples = sum(sample_counts);
+
+    % Preallocate
+    a = zeros(total_samples, 1);
+    idx = 1;
+
+    for j = 1:3
+        cnt = sample_counts(j);
+        mu_j = mean(j, i);
+        a(idx:idx + cnt - 1) = randn(cnt, 1) * sqrt(sigma) + mu_j;
+        idx = idx + cnt;
+    end
+
+    % Clip to minVal:maxVal range and bin into histogram
+    valid = (a > minVal) & (a < maxVal);
+    data(:, i) = hist(a(valid), x)';
 end
 
 data=bsxfun(@rdivide,data,sum(data));   % normalize the data
